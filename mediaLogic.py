@@ -1,13 +1,40 @@
-import videoInput
-import serializer
-import visualize
+import flask
+from flask import request, jsonify
+import sqlite3
+import uuid
+import db_util
 
-vid = videoInput.VideoInput('/Users/davisc/Downloads/2019_03_31_001-edit.mp4')
-vidShort = videoInput.VideoInput('/Users/davisc/Desktop/PG-Vick-SYR-15-CaHD_C001_SRC-EXT.mov')
+app = flask.Flask(__name__)
+app.config["DEBUG"] = True
 
-data = vidShort.videoRead()
-#serializer.toJson(data)
-visualize.visMSE(data)
+@app.route('/', methods=['GET'])
+def home():
+    return '''<h1>mediaLogic</h1>
+<p>An mediaProcessing API</p>'''
 
-#if __name__ == "__main__":
-#    mediaLogic().run()
+@app.route('/api/v1/initiate', methods=['POST'])
+def initiate():
+    task_parameters = request.get_json()
+    task_id = str(uuid.uuid1())
+    task_type = 'initiate'
+    source_file = task_parameters.get('sourceFile')
+
+    db_util.insertTask(task_id, task_type, source_file)
+    task = db_util.printTask(task_id)
+
+    return jsonify(task)
+
+@app.route('/api/v1/encode', methods=['POST'])
+def encode():
+    task_parameters = request.get_json()
+    task_id = str(uuid.uuid1())
+    task_type = 'encode'
+    source_file = task_parameters.get('sourceFile')
+
+    db_util.insertTask(task_id, task_type, source_file)
+    task = db_util.printTask(task_id)
+
+    return jsonify(task)
+
+app.run()
+
